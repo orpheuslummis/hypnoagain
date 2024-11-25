@@ -24,7 +24,7 @@ async function generateImage(prompt: string) {
         prompt: fullPrompt,
         width: 1024,
         height: 768,
-        steps: 8,
+        steps: 4,
         n: 1,
         response_format: "b64_json",
       }),
