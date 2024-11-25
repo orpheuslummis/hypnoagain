@@ -5,11 +5,11 @@ const client = new AssemblyAI({
 });
 
 let latestImage: { transcription: string; imageUrl: string } | null = null;
+let currentMetaPrompt =
+  "inspired by but not exactly Remedios Varo and Joan Miró ... surrealist dreamlike imagery, melting psychedelic";
 
 async function generateImage(prompt: string) {
-  const metaPrompt =
-    "inspired by but not exactly Remedios Varo and Joan Miró ... surrealist dreamlike imagery, melting psychedelic";
-  const fullPrompt = `${metaPrompt}, ${prompt}`;
+  const fullPrompt = `${currentMetaPrompt}, ${prompt}`;
 
   const response = await fetch(
     "https://api.together.xyz/v1/images/generations",
@@ -61,37 +61,73 @@ async function transcribeAudio(audioFile: File): Promise<string> {
 }
 
 export const handler = async (req: Request) => {
-  if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
-  }
+  if (req.method === "POST") {
+    const contentType = req.headers.get("content-type");
 
-  try {
-    const formData = await req.formData();
-    const audioFile = formData.get("audio") as File;
+    try {
+      // Handle meta prompt updates (both JSON and form-data)
+      if (contentType?.includes("application/json")) {
+        const { metaPrompt } = await req.json();
+        if (typeof metaPrompt === "string") {
+          currentMetaPrompt = metaPrompt;
+          return new Response(JSON.stringify({ success: true, metaPrompt }), {
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        const formData = await req.formData();
+        const metaPrompt = formData.get("metaPrompt");
+        const audioFile = formData.get("audio") as File;
 
-    if (!audioFile) {
-      return new Response("No audio file", { status: 400 });
+        // If there's a metaPrompt in the form data, handle it as a settings update
+        if (metaPrompt) {
+          currentMetaPrompt = metaPrompt.toString();
+          // Redirect back to settings page after update
+          return new Response(null, {
+            status: 303,
+            headers: { Location: "/settings" },
+          });
+        }
+
+        // Otherwise, handle as audio processing
+        if (!audioFile) {
+          return new Response("No audio file", { status: 400 });
+        }
+
+        const transcription = await transcribeAudio(audioFile);
+        const imageBase64 = await generateImage(transcription);
+
+        latestImage = {
+          transcription,
+          imageUrl: `data:image/jpeg;base64,${imageBase64}`,
+        };
+
+        return new Response(JSON.stringify(latestImage), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : String(error);
+      console.error("Processing error:", errorMessage);
+      return new Response(`Error processing request: ${errorMessage}`, {
+        status: 500,
+      });
     }
-
-    const transcription = await transcribeAudio(audioFile);
-    const imageBase64 = await generateImage(transcription);
-
-    latestImage = {
-      transcription,
-      imageUrl: `data:image/jpeg;base64,${imageBase64}`,
-    };
-
-    return new Response(JSON.stringify(latestImage), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Processing error:", errorMessage);
-    return new Response(`Error processing request: ${errorMessage}`, {
-      status: 500,
-    });
   }
+
+  // Handle GET requests for settings
+  if (req.method === "GET") {
+    return new Response(
+      JSON.stringify({ metaPrompt: currentMetaPrompt }),
+      {
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  return new Response("Method Not Allowed", { status: 405 });
 };
 
 export const getLatestImage = () => {

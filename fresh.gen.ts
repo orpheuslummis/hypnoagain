@@ -8,6 +8,7 @@ import * as $api_get_latest_image from "./routes/api/get-latest-image.ts";
 import * as $api_process from "./routes/api/process.ts";
 import * as $display from "./routes/display.tsx";
 import * as $index from "./routes/index.tsx";
+import * as $settings from "./routes/settings.tsx";
 import * as $ImageViewer from "./islands/ImageViewer.tsx";
 import * as $RecordAudio from "./islands/RecordAudio.tsx";
 import type { Manifest } from "$fresh/server.ts";
@@ -20,6 +21,7 @@ const manifest = {
     "./routes/api/process.ts": $api_process,
     "./routes/display.tsx": $display,
     "./routes/index.tsx": $index,
+    "./routes/settings.tsx": $settings,
   },
   islands: {
     "./islands/ImageViewer.tsx": $ImageViewer,

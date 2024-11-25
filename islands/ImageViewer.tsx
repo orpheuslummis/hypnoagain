@@ -25,7 +25,7 @@ export default function FullScreenImage() {
 
   if (error) {
     return (
-      <div class="min-h-screen flex items-center justify-center bg-red-100">
+      <div class="fixed inset-0 flex items-center justify-center bg-red-100">
         <div class="text-red-600 text-xl">Error: {error}</div>
       </div>
     );
@@ -33,18 +33,18 @@ export default function FullScreenImage() {
 
   if (!imageUrl) {
     return (
-      <div class="min-h-screen flex items-center justify-center bg-gray-100">
+      <div class="fixed inset-0 flex items-center justify-center bg-gray-100">
         <div class="text-gray-600 text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div class="min-h-screen flex items-center justify-center bg-black">
+    <div class="fixed inset-0 flex items-center justify-center bg-black">
       <img
         src={imageUrl}
         alt="Generated image"
-        class="max-w-full max-h-screen object-contain"
+        class="w-full h-full object-contain"
       />
     </div>
   );

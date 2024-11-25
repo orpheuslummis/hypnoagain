@@ -100,10 +100,10 @@ export default function RecordAudio() {
   };
 
   return (
-    <div class="min-h-screen flex flex-col items-center justify-center bg-[#86efac] p-4">
+    <div class="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-4 gap-4">
       <button
         onClick={isRecording ? stopRecording : startRecording}
-        class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-full text-xl font-bold transition-colors"
+        class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-3 rounded-lg text-lg transition-colors"
         disabled={isProcessing}
       >
         {isProcessing
