@@ -105,6 +105,14 @@ export const handler = async (req: Request) => {
 
   // Handle GET requests for settings
   if (req.method === "GET") {
+    const url = new URL(req.url);
+    // Check if request is from settings page
+    const isSettingsRequest = url.searchParams.has("settings");
+
+    if (!isSettingsRequest) {
+      return new Response("Invalid request", { status: 400 });
+    }
+
     return new Response(
       JSON.stringify({ metaPrompt: currentMetaPrompt }),
       {

@@ -3,7 +3,7 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 export const handler: Handlers = {
   async GET(_req, ctx) {
     try {
-      const url = `${new URL(_req.url).origin}/api/process`;
+      const url = `${new URL(_req.url).origin}/api/process?settings=true`;
       const response = await fetch(url, {
         method: "GET",
         headers: {
