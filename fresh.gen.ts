@@ -4,22 +4,26 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
-import * as $api_joke from "./routes/api/joke.ts";
-import * as $greet_name_ from "./routes/greet/[name].tsx";
+import * as $api_get_latest_image from "./routes/api/get-latest-image.ts";
+import * as $api_process from "./routes/api/process.ts";
+import * as $display from "./routes/display.tsx";
 import * as $index from "./routes/index.tsx";
-import * as $Counter from "./islands/Counter.tsx";
+import * as $ImageViewer from "./islands/ImageViewer.tsx";
+import * as $RecordAudio from "./islands/RecordAudio.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
-    "./routes/api/joke.ts": $api_joke,
-    "./routes/greet/[name].tsx": $greet_name_,
+    "./routes/api/get-latest-image.ts": $api_get_latest_image,
+    "./routes/api/process.ts": $api_process,
+    "./routes/display.tsx": $display,
     "./routes/index.tsx": $index,
   },
   islands: {
-    "./islands/Counter.tsx": $Counter,
+    "./islands/ImageViewer.tsx": $ImageViewer,
+    "./islands/RecordAudio.tsx": $RecordAudio,
   },
   baseUrl: import.meta.url,
 } satisfies Manifest;
