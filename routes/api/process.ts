@@ -11,6 +11,16 @@ async function generateImage(prompt: string) {
   const settings = await getSettings();
   const fullPrompt = `${settings.metaPrompt}, ${prompt}`;
 
+  const requestBody = {
+    model: "black-forest-labs/FLUX.1-schnell",
+    prompt: fullPrompt,
+    width: 1024,
+    height: 768,
+    steps: 4,
+    n: 1,
+    response_format: "b64_json",
+  };
+
   const response = await fetch(
     "https://api.together.xyz/v1/images/generations",
     {
@@ -19,23 +29,26 @@ async function generateImage(prompt: string) {
         "Authorization": `Bearer ${Deno.env.get("TOGETHER_API_KEY")}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "black-forest-labs/FLUX.1-schnell",
-        prompt: fullPrompt,
-        width: 1024,
-        height: 768,
-        steps: 4,
-        n: 1,
-        response_format: "b64_json",
-      }),
+      body: JSON.stringify(requestBody),
     },
   );
 
   if (!response.ok) {
-    throw new Error(`Together API error: ${response.statusText}`);
+    const errorData = await response.json().catch(() => null);
+    throw new Error(
+      `Together API error: ${response.statusText}. Status: ${response.status}. Details: ${
+        JSON.stringify(errorData)
+      }`,
+    );
   }
 
   const data = await response.json();
+  if (!data.data?.[0]?.b64_json) {
+    throw new Error(
+      `Invalid response from Together API: ${JSON.stringify(data)}`,
+    );
+  }
+
   return data.data[0].b64_json;
 }
 
