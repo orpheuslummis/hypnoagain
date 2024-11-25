@@ -1,15 +1,15 @@
 import { AssemblyAI } from "assemblyai";
+import { getSettings } from "../../utils/settings.ts";
 
 const client = new AssemblyAI({
   apiKey: Deno.env.get("ASSEMBLYAI_API_KEY") || "",
 });
 
 let latestImage: { transcription: string; imageUrl: string } | null = null;
-let currentMetaPrompt =
-  "inspired by but not exactly Remedios Varo and Joan Miró ... surrealist dreamlike imagery, melting psychedelic";
 
 async function generateImage(prompt: string) {
-  const fullPrompt = `${currentMetaPrompt}, ${prompt}`;
+  const settings = await getSettings();
+  const fullPrompt = `${settings.metaPrompt}, ${prompt}`;
 
   const response = await fetch(
     "https://api.together.xyz/v1/images/generations",
@@ -64,19 +64,8 @@ export const handler = async (req: Request) => {
   if (req.method === "POST") {
     try {
       const formData = await req.formData();
-      const metaPrompt = formData.get("metaPrompt");
       const audioFile = formData.get("audio") as File;
 
-      // Handle settings update
-      if (metaPrompt) {
-        currentMetaPrompt = metaPrompt.toString();
-        return new Response(null, {
-          status: 303,
-          headers: { Location: "/settings" },
-        });
-      }
-
-      // Handle audio processing
       if (!audioFile) {
         return new Response("No audio file", { status: 400 });
       }
@@ -103,22 +92,9 @@ export const handler = async (req: Request) => {
     }
   }
 
-  // Handle GET requests for settings
+  // Handle GET requests for latest image
   if (req.method === "GET") {
-    const url = new URL(req.url);
-    // Check if request is from settings page
-    const isSettingsRequest = url.searchParams.has("settings");
-
-    if (!isSettingsRequest) {
-      return new Response("Invalid request", { status: 400 });
-    }
-
-    return new Response(
-      JSON.stringify({ metaPrompt: currentMetaPrompt }),
-      {
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return getLatestImage();
   }
 
   return new Response("Method Not Allowed", { status: 405 });

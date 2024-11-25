@@ -1,26 +1,33 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
+import { getSettings, updateSettings } from "../utils/settings.ts";
 
 export const handler: Handlers = {
   async GET(_req, ctx) {
     try {
-      const url = `${new URL(_req.url).origin}/api/process?settings=true`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return ctx.render(data);
+      const settings = await getSettings();
+      return ctx.render(settings);
     } catch (error) {
       console.error("Settings fetch error:", error);
       return ctx.render({
         metaPrompt: "Error loading settings. Default prompt will be used.",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  },
+
+  async POST(req, ctx) {
+    try {
+      const formData = await req.formData();
+      const metaPrompt = formData.get("metaPrompt")?.toString() || "";
+      await updateSettings(metaPrompt);
+      return new Response("", {
+        status: 303,
+        headers: { Location: "/settings" },
+      });
+    } catch (error) {
+      console.error("Settings update error:", error);
+      return ctx.render({
+        metaPrompt: "",
         error: error instanceof Error ? error.message : "Unknown error",
       });
     }
@@ -39,7 +46,7 @@ export default function SettingsPage(
             {data.error}
           </div>
         )}
-        <form method="POST" action="/api/process">
+        <form method="POST">
           <textarea
             name="metaPrompt"
             class="w-full bg-gray-700 text-white p-2 rounded-lg mb-4"
