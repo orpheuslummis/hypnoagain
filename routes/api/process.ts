@@ -20,7 +20,7 @@ async function generateImage(prompt: string) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "black-forest-labs/FLUX.1-schnell-Free",
+        model: "black-forest-labs/FLUX.1-schnell",
         prompt: fullPrompt,
         width: 1024,
         height: 768,
