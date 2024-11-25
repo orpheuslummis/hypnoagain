@@ -2,21 +2,43 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 
 export const handler: Handlers = {
   async GET(_req, ctx) {
-    const response = await fetch(`${new URL(_req.url).origin}/api/process`, {
-      method: "GET",
-    });
-    const data = await response.json();
-    return ctx.render(data);
+    try {
+      const url = `${new URL(_req.url).origin}/api/process`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return ctx.render(data);
+    } catch (error) {
+      console.error("Settings fetch error:", error);
+      return ctx.render({
+        metaPrompt: "Error loading settings. Default prompt will be used.",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
   },
 };
 
 export default function SettingsPage(
-  { data }: PageProps<{ metaPrompt: string }>,
+  { data }: PageProps<{ metaPrompt: string; error?: string }>,
 ) {
   return (
     <div class="min-h-screen bg-gray-900 p-4">
       <div class="max-w-lg mx-auto">
         <h1 class="text-white text-2xl mb-4">Image Generation Settings</h1>
+        {data.error && (
+          <div class="bg-red-500 text-white p-4 rounded-lg mb-4">
+            {data.error}
+          </div>
+        )}
         <form method="POST" action="/api/process">
           <textarea
             name="metaPrompt"

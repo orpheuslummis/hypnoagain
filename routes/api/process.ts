@@ -62,50 +62,36 @@ async function transcribeAudio(audioFile: File): Promise<string> {
 
 export const handler = async (req: Request) => {
   if (req.method === "POST") {
-    const contentType = req.headers.get("content-type");
-
     try {
-      // Handle meta prompt updates (both JSON and form-data)
-      if (contentType?.includes("application/json")) {
-        const { metaPrompt } = await req.json();
-        if (typeof metaPrompt === "string") {
-          currentMetaPrompt = metaPrompt;
-          return new Response(JSON.stringify({ success: true, metaPrompt }), {
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      } else {
-        const formData = await req.formData();
-        const metaPrompt = formData.get("metaPrompt");
-        const audioFile = formData.get("audio") as File;
+      const formData = await req.formData();
+      const metaPrompt = formData.get("metaPrompt");
+      const audioFile = formData.get("audio") as File;
 
-        // If there's a metaPrompt in the form data, handle it as a settings update
-        if (metaPrompt) {
-          currentMetaPrompt = metaPrompt.toString();
-          // Redirect back to settings page after update
-          return new Response(null, {
-            status: 303,
-            headers: { Location: "/settings" },
-          });
-        }
-
-        // Otherwise, handle as audio processing
-        if (!audioFile) {
-          return new Response("No audio file", { status: 400 });
-        }
-
-        const transcription = await transcribeAudio(audioFile);
-        const imageBase64 = await generateImage(transcription);
-
-        latestImage = {
-          transcription,
-          imageUrl: `data:image/jpeg;base64,${imageBase64}`,
-        };
-
-        return new Response(JSON.stringify(latestImage), {
-          headers: { "Content-Type": "application/json" },
+      // Handle settings update
+      if (metaPrompt) {
+        currentMetaPrompt = metaPrompt.toString();
+        return new Response(null, {
+          status: 303,
+          headers: { Location: "/settings" },
         });
       }
+
+      // Handle audio processing
+      if (!audioFile) {
+        return new Response("No audio file", { status: 400 });
+      }
+
+      const transcription = await transcribeAudio(audioFile);
+      const imageBase64 = await generateImage(transcription);
+
+      latestImage = {
+        transcription,
+        imageUrl: `data:image/jpeg;base64,${imageBase64}`,
+      };
+
+      return new Response(JSON.stringify(latestImage), {
+        headers: { "Content-Type": "application/json" },
+      });
     } catch (error: unknown) {
       const errorMessage = error instanceof Error
         ? error.message

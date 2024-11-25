@@ -5,6 +5,7 @@ export default function RecordAudio() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null,
   );
+  const [_mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const getSupportedMimeType = () => {
@@ -26,6 +27,8 @@ export default function RecordAudio() {
           sampleRate: 44100,
         },
       });
+      setMediaStream(stream);
+
       const recorder = new MediaRecorder(stream, {
         mimeType: getSupportedMimeType(),
       });
@@ -45,6 +48,10 @@ export default function RecordAudio() {
         } else {
           alert("No audio was recorded. Please try again.");
         }
+
+        // Clean up the stream
+        stream.getTracks().forEach((track) => track.stop());
+        setMediaStream(null);
       };
 
       recorder.start(200);
@@ -74,6 +81,7 @@ export default function RecordAudio() {
     if (mediaRecorder) {
       mediaRecorder.stop();
       setIsRecording(false);
+      setMediaRecorder(null);
     }
   };
 
