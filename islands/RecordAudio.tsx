@@ -7,11 +7,27 @@ export default function RecordAudio() {
   );
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const getSupportedMimeType = () => {
+    const types = [
+      "audio/webm",
+      "audio/webm;codecs=opus",
+      "audio/mp4",
+      "audio/mp4;codecs=mp4a.40.2",
+    ];
+    return types.find((type) => MediaRecorder.isTypeSupported(type)) ||
+      "audio/webm";
+  };
+
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          sampleRate: 44100,
+        },
+      });
       const recorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
+        mimeType: getSupportedMimeType(),
       });
 
       const chunks: Blob[] = [];
@@ -36,7 +52,21 @@ export default function RecordAudio() {
       setIsRecording(true);
     } catch (error) {
       console.error("Error accessing microphone", error);
-      alert("Could not access microphone. Please check permissions.");
+      if (error instanceof DOMException && error.name === "NotAllowedError") {
+        alert(
+          "Microphone access was denied. Please allow microphone access in your browser settings.",
+        );
+      } else if (
+        error instanceof DOMException && error.name === "NotFoundError"
+      ) {
+        alert(
+          "No microphone found. Please ensure your device has a working microphone.",
+        );
+      } else {
+        alert(
+          "Could not access microphone. Please check permissions and try again.",
+        );
+      }
     }
   };
 
